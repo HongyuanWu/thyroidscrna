@@ -6,7 +6,6 @@ library("metacor")
 
 load("~/hpc/methylation/Pancancer/RNA-seq/rnaseqdata.pancancer.RData")
 
-
 Symbol2ENSG<-function(Symbol){
   db<-read.table("https://raw.githubusercontent.com/Shicheng-Guo/AnnotationDatabase/master/ENSG.ENST.ENSP.Symbol.hg19.bed",sep="\t")
   ENSG<-as.character(db[match(Symbol,db$V4),8])
