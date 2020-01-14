@@ -3,7 +3,8 @@ source("https://raw.githubusercontent.com/Shicheng-Guo/GscRbasement/master/GscTo
 library("metafor")
 library("meta")
 library("metacor")
-load("rnaseqdata.pancancer.RData")
+
+load("~/hpc/methylation/Pancancer/RNA-seq/rnaseqdata.pancancer.RData")
 
 
 Symbol2ENSG<-function(Symbol){
@@ -26,22 +27,23 @@ ensg2bed<-function(ENSG){
   return(bed)
 }
 
+
 GSIMethDecon<-function(data){
   data<-data.matrix(data)
   group=names(table(colnames(data)))
   index=colnames(data)
   gsi<-gmaxgroup<-avebase<-c()
   for(i in 1:nrow(data)){
-  gsit<-0
-  gmax<-names(which.max(tapply(as.numeric(data[i,]),index,function(x) mean(x,na.rm=T))))
-  for(j in 1:length(group)){
-    tmp<-(1-10^(mean(data[i,][which(index==group[j])],na.rm=T))/10^(mean(data[i,][which(index==gmax)],,na.rm=T)))/(length(group)-1)
-    gsit<-gsit+tmp
-  }
-  ave<-tapply(data[i,], index, function(x) mean(x,na.rm=T))
-  gmaxgroup<-c(gmaxgroup,gmax)
-  gsi<-c(gsi,gsit)
-  avebase<-rbind(avebase,ave)
+    gsit<-0
+    gmax<-names(which.max(tapply(as.numeric(data[i,]),index,function(x) mean(x,na.rm=T))))
+    for(j in 1:length(group)){
+      tmp<-(1-10^(mean(data[i,][which(index==group[j])],na.rm=T))/10^(mean(data[i,][which(index==gmax)],,na.rm=T)))/(length(group)-1)
+      gsit<-gsit+tmp
+    }
+    ave<-tapply(data[i,], index, function(x) mean(x,na.rm=T))
+    gmaxgroup<-c(gmaxgroup,gmax)
+    gsi<-c(gsi,gsit)
+    avebase<-rbind(avebase,ave)
   }
   rlt=data.frame(region=rownames(data),group=gmaxgroup,GSI=gsi,AVE=avebase)
   return(rlt)
@@ -69,14 +71,14 @@ gsi<-function(data){
 
 HeatMap<-function(data,Rowv=T,Colv=T){
   
-#  note: this function include correlation based heatmap (pearson or spearman)
-#  data: row is gene and column is sample
-#  colname and rowname cannot be NULL  
-#  Usage example:
-#  test<- matrix(runif(100),nrow=20)
-#  colnames(test)=c("A","A","A","B","B")
-#  rownames(test)=paste("Gene",1:20,sep="")
-#  HeatMap(test)
+  #  note: this function include correlation based heatmap (pearson or spearman)
+  #  data: row is gene and column is sample
+  #  colname and rowname cannot be NULL  
+  #  Usage example:
+  #  test<- matrix(runif(100),nrow=20)
+  #  colnames(test)=c("A","A","A","B","B")
+  #  rownames(test)=paste("Gene",1:20,sep="")
+  #  HeatMap(test)
   
   library("gplots")
   colors <- colorpanel(75,"midnightblue","mediumseagreen","yellow") 
@@ -101,7 +103,7 @@ HeatMap<-function(data,Rowv=T,Colv=T){
             density.info="none",col=colors,
             Colv=Colv,Rowv = Rowv,
             keysize=0.9, margins = c(5, 10)
-            )
+  )
 }
 
 
@@ -140,6 +142,7 @@ input[1:5,1:5]
 colnames(input)<-phen$cases.0.submitter_id
 input[1:5,1:5]
 
+
 ############################################################################################################
 ### GSI and HEATMAP (scRNA-seq)
 setwd("/home/local/MFLDCLIN/guosa/hpc/project/thyroid/scRNA")
@@ -154,7 +157,6 @@ newinput<-newinput[,order(colnames(newinput))]
 rlt<-GSIMethDecon(newinput)
 xsel<-subset(rlt,GSI>0.99)
 matrix<-newinput[match(xsel[order(xsel$group),1],rownames(newinput)),]
-
 
 library("gplots")
 pdf("heatmap2.pdf")
@@ -177,120 +179,3 @@ dev.off()
 pdf("heatmap7.pdf")
 HeatMap(scale(matrix),Rowv=F,Colv=F)
 dev.off()
-
-
-
-
-
-xxxv<-read.csv("https://raw.githubusercontent.com/Shicheng-Guo/ferroptosis/master/ferroptosis.genelist.csv",head=F)
-xxxv<-read.table("https://raw.githubusercontent.com/Shicheng-Guo/ferroptosis/master/tsg.positivecontrol.txt",head=F)
-xxxv<-read.table("https://raw.githubusercontent.com/Shicheng-Guo/esophageal/master/phase1.genelist.txt",head=F)
-
-ENSG<-Symbol2ENSG(as.character(xxxv[,1]))
-xgene<-c(as.character(ENSG[,2]))
-ii<-unlist(lapply(xgene,function(x) grep(x,rownames(input))))
-
-Seq<-paste(phen$project_id,phen$phen2,sep="-")
-rlt<-c()
-coll<-c()
-
-for(i in ii){
-  mean<-tapply(as.numeric(input[i,]),Seq,function(x) mean(x,na.rm=T))
-  sd<-tapply(as.numeric(input[i,]),Seq,function(x) sd(x,na.rm=T))
-  num<-tapply(as.numeric(input[i,]),Seq,function(x) length(x))
-  m1i=mean[seq(1,length(mean),by=2)]
-  m2i=mean[seq(2,length(mean),by=2)]
-  sd1i=sd[seq(1,length(mean),by=2)]
-  sd2i=sd[seq(2,length(mean),by=2)]
-  n1i=num[seq(1,length(mean),by=2)]
-  n2i=num[seq(2,length(mean),by=2)]
-  Source<-unlist(lapply(strsplit(names(m1i),"-"),function(x) x[2]))
-  output<-data.frame(cbind(n1i,m1i,sd1i,n2i,m2i,sd2i))
-  output$source=Source
-  output<-na.omit(output)
-  es<-escalc(m1i=m1i, sd1i=sd1i, n1i=n1i, m2i=m2i, sd2i=sd2i, n2i=n2i,measure="MD",data=output)
-  md <- rma(es,slab=source,method = "REML", measure = "SMD",data=output)
-  rlt<-rbind(rlt,c(i,md$beta,md$pval,md$ci.lb,md$ci.ub,md$I2,md$tau2))
-  coll<-c(coll,i)
-  m<-metagen(yi,seTE=vi,data = es,
-             comb.fixed = TRUE,
-             comb.random = TRUE,
-             prediction=F,
-             sm="SMD")
-
-  Symbol<-ENSG2Symbol(rownames(input)[i])
-  print(c(i,as.character(Symbol)))
-  pdf(paste("/home/local/MFLDCLIN/guosa/hpc/project/ferroptosis/",Symbol,"-",rownames(input)[i],".SMD.PANC.pdf",sep=""))
-  forest(m,leftlabs = Source,
-         lab.e = "Intervention",
-         pooled.totals = FALSE,
-         smlab = "",studlab=Source,
-         text.random = "Overall effect",
-         print.tau2 = FALSE,
-         col.diamond = "blue",
-         col.diamond.lines = "black",
-         col.predict = "red",
-         print.I2.ci = TRUE,
-         digits.sd = 2,fontsize=8)
-  dev.off()
-}
-rownames(rlt)<-ENSG2Symbol(rownames(input)[coll])
-colnames(rlt)<-c("idx","beta","pval","cilb","ciub","i2","tau2")
-rlt<-data.frame(rlt)
-head(rlt[order(rlt$pval),])
-write.table(rlt,file="/home/local/MFLDCLIN/guosa/hpc/project/ferroptosis/ferroptosis.meta.table.pvalue.txt",sep="\t",quote=F,col.names = NA,row.names = T)
-
-rownames(rlt)<-rownames(input)[coll]
-bed<-ensg2bed(as.character(rownames(input)[coll]))
-xsel<-unlist(apply(bed,1,function(x) grep(x[4],rownames(rlt))))
-output<-data.frame(bed,rlt[xsel,])
-library("CMplot")
-cminput<-data.frame(SNP=output$V5,Chromosome=output$V1,Position=output$V2,trait1=output[,7])
-CMplot(cminput,plot.type="b",ylim=20,LOG10=TRUE,threshold=NULL,file="jpg",memo="",dpi=300,file.output=TRUE,verbose=TRUE,width=14,height=6)
-
-write.table(cminput,file="ferroptosis.pancancer.meta.dge.txt",sep="\t",quote=F,row.name=T,col.names=NA)
-
-# co-expression network
-netgene<-read.table("https://raw.githubusercontent.com/Shicheng-Guo/ferroptosis/master/NCOA4.tfbs.txt",head=F)
-ENSG<-Symbol2ENSG(as.character(c("NCOA4",as.character(netgene[,1]))))
-xgene<-as.character(ENSG[,2])
-
-Rmatrix<-c()
-for(j in 2:length(xgene)){
-out<-c()
-name<-c()
-	for(i in unique(pid)){
-	  temp<-input[,which(pid==i)]
-	  print(c(i,dim(temp)))
-	  if(ncol(data.frame(temp))>2){
-	  temp<-log(temp+1,2)
-	  temp<-temp[unlist(lapply(xgene[c(1,j)],function(x) grep(x,rownames(temp)))),]
-	  fit<-cor.test(x=t(temp)[,1],y=t(temp)[,2])
-	  out<-rbind(out,c(fit$estimate,fit$p.value))
-	  name<-c(name,i)
-	  }
-	rownames(out)<-name
-	colnames(out)<-c("R","Pvalues")
-	}
-	xxgene<-ENSG2Symbol(rownames(temp))
-	filename<-paste("../../",xxgene[1],"-",xxgene[2],".tcga.pancancer.coexpression.csv",sep="")
-	print(xxgene[2])
-	write.csv(out,file=filename)
-}
-
-
-m.cor <- metacor(cor, n, data = cordata, studlab = cordata$Author, sm = "ZCOR", method.tau = "SJ")
-				 
-				 
-
-
-
-
-
-
-
-
-
-
-
-
