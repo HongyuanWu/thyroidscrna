@@ -1,6 +1,7 @@
 #### Multi-omics molecular profiles based on TCGA-data and scRNA-seq data
 
 ```
+\\mcrfnas2\bigdata\Genetic\Projects\shg047\project\thyroid\scRNA
 ```
 
 Timeline:
