@@ -2,6 +2,8 @@
 
 ```
 /home/guosa/hpc/project/thyroid/scRNA
+/home/guosa/hpc/methylation/Pancancer/methdata.pancancer.RData
+/home/guosa/hpc/methylation/Pancancer/RNA-seq/rnaseqdata.pancancer.RData
 ```
 
 Timeline:
